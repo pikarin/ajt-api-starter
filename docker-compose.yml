@@ -1,0 +1,18 @@
+services:
+    php:
+        build:
+            context: .
+            target: development
+            args:
+                # UID and GID must be set as environment variables on the host machine
+                USER_ID: $UID
+                GROUP_ID: $GID
+        environment:
+            - AUTORUN_ENABLED=false
+            - AUTORUN_LARAVEL_MIGRATION=false
+            - AUTORUN_LARAVEL_STORAGE_LINK=false
+        ports:
+            - "8080:8080"
+            - "8443:8443"
+        volumes:
+            - .:/var/www/html
