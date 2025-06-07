@@ -1,5 +1,6 @@
 services:
     php:
+        container_name: ${PHP_CONTAINER_NAME:-ajt-api-php}
         build:
             context: .
             target: development
@@ -7,6 +8,7 @@ services:
                 # UID and GID must be set as environment variables on the host machine
                 USER_ID: $UID
                 GROUP_ID: $GID
+        image: ${DOCKER_IMAGE_NAME:-ajt-api-php}
         environment:
             - AUTORUN_ENABLED=false
             - AUTORUN_LARAVEL_MIGRATION=false
@@ -14,5 +16,17 @@ services:
         ports:
             - "8080:8080"
             - "8443:8443"
+        volumes:
+            - .:/var/www/html
+
+    scheduler:
+        container_name: ${SCHEDULER_CONTAINER_NAME:-ajt-api-scheduler}
+        image: ${DOCKER_IMAGE_NAME:-ajt-api-php}
+        profiles: [scheduler]
+        command: ["php", "/var/www/html/artisan", "schedule:work"]
+        stop_signal: SIGTERM
+        healthcheck:
+            test: [ "CMD", "healthcheck-schedule" ]
+            start_period: 10s
         volumes:
             - .:/var/www/html
