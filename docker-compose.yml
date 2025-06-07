@@ -30,3 +30,16 @@ services:
             start_period: 10s
         volumes:
             - .:/var/www/html
+
+    queue:
+        container_name: ${QUEUE_CONTAINER_NAME:-ajt-api-queue}
+        image: ${DOCKER_IMAGE_NAME:-ajt-api-php}
+        profiles: [queue]
+        command: [ "php", "/var/www/html/artisan", "queue:work", "--tries=3" ]
+        stop_signal: SIGTERM
+        healthcheck:
+            # This is our native healthcheck script for the queue
+            test: [ "CMD", "healthcheck-queue" ]
+            start_period: 10s
+        volumes:
+            - .:/var/www/html
