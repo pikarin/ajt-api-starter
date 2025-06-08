@@ -19,9 +19,10 @@ build:php-libs:
     expire_in: 7 days
     paths:
       - vendor
-  only:
-    - development
-    - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+    - if: $CI_COMMIT_BRANCH == "main"
   script: composer install --no-interaction --optimize-autoloader
 
 test:pest:
@@ -31,9 +32,10 @@ test:pest:
     SHOW_WELCOME_MESSAGE: "false"
   dependencies:
     - build:php-libs
-  only:
-    - development
-    - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+    - if: $CI_COMMIT_BRANCH == "main"
   before_script:
     - cp .env.example .env
     - php artisan key:generate
@@ -48,9 +50,10 @@ test:style:
     SHOW_WELCOME_MESSAGE: "false"
   dependencies:
     - build:php-libs
-  only:
-    - development
-    - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+    - if: $CI_COMMIT_BRANCH == "main"
   before_script:
     - apk add --no-cache git zip unzip
   script:
@@ -63,9 +66,10 @@ test:phpstan:
     SHOW_WELCOME_MESSAGE: "false"
   dependencies:
     - build:php-libs
-  only:
-    - development
-    - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "development"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+    - if: $CI_COMMIT_BRANCH == "main"
   before_script:
     - cp .env.example .env
   script:
