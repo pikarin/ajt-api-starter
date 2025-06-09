@@ -3,6 +3,7 @@ image: php:8.4
 stages:
   - build
   - test
+  - deploy
 
 build:php-libs:
   stage: build
@@ -24,6 +25,29 @@ build:php-libs:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
     - if: $CI_COMMIT_BRANCH == "main"
   script: composer install --no-interaction --optimize-autoloader
+
+build:php-libs-prod:
+  stage: build
+  image: composer:2.8
+  cache:
+    key:
+      files:
+        - composer.lock
+    policy: pull-push
+    paths:
+      - vendor
+    when: always
+  artifacts:
+    expire_in: 7 days
+    paths:
+      - vendor
+    name: "vendor-prod"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: always
+    - if: $CI_COMMIT_BRANCH == "development"
+      when: always
+  script: composer install --no-interaction --optimize-autoloader --no-dev
 
 test:pest:
   stage: test
@@ -74,3 +98,31 @@ test:phpstan:
     - cp .env.example .env
   script:
     - ./vendor/bin/phpstan analyse
+
+deploy:development:
+  stage: deploy
+  image: instrumentisto/rsync-ssh
+  environment:
+    name: development
+  variables:
+    DEPLOY_DIR: /var/www/ajt-recommendation-service
+    DEPLOY_USER: devops
+    DEPLOY_HOST: $STAGING_IP_ADDRESS
+    SSH_KEY: $STAGING_SSH_PRIVATE_KEY
+    SSH_KNOWN_HOSTS: $STAGING_SSH_KNOWN_HOSTS
+  dependencies:
+    - build:php-libs-prod
+  rules:
+    - if: $CI_COMMIT_BRANCH == "development"
+      when: always
+  before_script:
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - eval $(ssh-agent -s)
+    - echo "$SSH_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh/known_hosts
+  script:
+    # copy the app files
+    - rsync -avrcp --delete --exclude-from=.gitlab-ci/exclude_list.txt --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r "$PWD"/ ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_DIR}
+    # fixed directory permissions
+    - ssh ${DEPLOY_USER}@${DEPLOY_HOST} "cd ${DEPLOY_DIR} && chmod 777 storage/ bootstrap/cache"
