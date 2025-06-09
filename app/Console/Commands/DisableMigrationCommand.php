@@ -4,10 +4,10 @@ namespace App\Console\Commands;
 
 use Illuminate\Database\Console\Migrations\MigrateCommand;
 
-class DisableMigration extends MigrateCommand
+class DisableMigrationCommand extends MigrateCommand
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function handle()
     {
