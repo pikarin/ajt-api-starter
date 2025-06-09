@@ -1,0 +1,8 @@
+.git/
+.gitlab-ci.yml
+.editorconfig
+.env.example
+.env
+bootstrap/cache/*
+storage/logs/*
+storage/framework/cache/data/*
